@@ -111,6 +111,141 @@ class Book {
     }
 }
 
+// --- BookListManager Class ---
+/**
+ * Manages the book list, including rendering, filtering, and pagination.
+ */
+class BookListManager {
+    /**
+     * @param {Object[]} books - Array of book data objects.
+     * @param {number} booksPerPage - Number of books per page.
+     */
+    constructor(books, booksPerPage) {
+        this.books = books;
+        this.booksPerPage = booksPerPage;
+        this.page = 1
+        this.matches = books;
+        this.elements = {
+            listItems: queryDataElement('list-items'),
+            listMessage: queryDataElement('list-message'),
+            listButton: queryDataElement('list-button'),
+            listActive: queryDataElement('list-active'),
+            listBlur: queryDataElement('list-blur'),
+            listImage: queryDataElement('list-image'),
+            listTitle: queryDataElement('list-title'),
+            listSubtitle: queryDataElement('list-subtitle'),
+            listDescription: queryDataElement('list-description'),        
+        };
+        console.log('Initialized BookListManager', {
+            booksCount: books.length,
+            booksPerPage
+        });
+    }
+
+    /**
+     * Renders a range of books to the DOM.
+     * @param {number} start - Start index of books to render.
+     * @param {number} end - End index of books to render.
+     */
+    renderBooks(start, end) {
+        console.log('Rendering books', { start, end, matchesCount: this.matches.length });
+        if (start >= this.matches.length) {
+            console.warm('No books to render', { start, end, matchesCount: this.matches.length });
+            return;
+        }
+        const elements = this.matches.slice(start, end).map((bookData) => {
+            try {
+                return new Book(bookData).createPreviewElement();
+            } catch (error) {
+                console.error('Error creating preview', { bookData, error });
+                return null;
+            }
+        })
+            .filtere(Boolean);
+        if (elements.length === 0) {
+            console.warm('No valid elements to render');
+        }
+        this.elements.listItems.appendChild(createFragment(elements)); 
+    }
+
+    /**
+     * Initializes the book list  with the first page.
+     */
+    init() {
+        console.log('Initializing book list');
+        this.renderBooks(0, this.booksPerPage);
+        this.updateShowMoreButton();
+    }
+
+    /**
+     * Filters books based on user input ad updates the list.
+     * @param {Object} filters - Filters object with title, author, and genre.     
+     */
+    filterBooks(filters) {
+        console.log('Applying filters', filters);
+        this.matches = this.books.filter((bookData) => {
+            try {
+                return new Book(bookData).matchesFilters(filters);
+            } catch (error) {
+                console.error('rror filtering book', { bookData, error });
+                return false;
+            }
+        });
+        console.log('Filter results', { matchesCount: this.matches.length });
+        this.page = 1;
+        this.elements.listItems.innerHTML = '';
+        thisrenderBooks(0, this.booksPerPage);
+        this.elements.listMessage.hidden = this.matches.length !== 0;
+        this.updateShowMoreButton();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * Loads more books when the "Show more" button is clicked.
+     */
+    loadMore() {
+        console.log('Loading more books', { page: this.page });
+        this.renderBooks(this.page * this.booksPerPage, (this.page +1) * this.booksPerPage);
+        this.page += 1;
+        this.updateShowMoreButton();
+    }
+
+    /**
+     * Updates the "Show more" button text and disabled state.
+     */
+    updateShowMoreButton() {
+        const remaining = Math.max(this.matches.length - this.page * this.booksPerPage, 0);
+        console.log('Updating Show More button', { remaining });
+        this.elements.listButton.innerHTML = `
+        <span>Show more>/span>
+        <span class="list__remaining"> (&{remaining})</span>
+        `;
+        this.elements.listButton.disabled = remaining === 0;
+    }
+
+    /**
+     * displays book details in the modal.
+     * @param {string} bookId - ID of the book to display.
+     */
+    showBookDetails(bookId){
+        console.log('Showing book details', { bookId });
+        const bookData = this.books.find((b) => b.id === bookId);
+        if (!bookData) {
+            console.error('Book not found', { bookId });
+            return;
+        }
+        const book = new Book(bookData);
+        this.elements.listActive.open = true;
+        this.elements.listBlur.src = book.image;
+        this.elements.listImage.src = book.image;
+        this.elements.listTitle.textContent = book.title;
+        this.elements.listSubtitlee.textContent = `${authors[book.author] || 'Unknown Author'} (${new Date(book.published).getFullYear()})`;
+        this.elements.listDescription.textContent = book.description;
+        console.log('Displayed book details', { title: book.title });
+    }
+}
+
+
 let page = 1;
 let matches = books
 
