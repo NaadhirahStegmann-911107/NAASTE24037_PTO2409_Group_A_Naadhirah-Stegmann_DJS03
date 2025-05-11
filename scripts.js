@@ -303,6 +303,23 @@ class ThemeManager {
     }
 }
 
+// --- Application Initialization ---
+try {
+    const bookList = new BookListManager(books, BOOKS_PER_PAGE);
+    console.log('BookListManager initialized');
+
+    //Initialize dropdowns
+    DropdownManager.populateDropdown('search-genres', genres, 'All Genres');
+    DropdownManager.populateDropdown('search-authors', authors, 'All Authors');
+
+    // Initialize theme
+    ThemeManager.init();
+
+    // Initialize book list
+    bookList.init();
+} catch (error) {
+    console.error('Initialization error', error);
+}
 
 
 let page = 1;
