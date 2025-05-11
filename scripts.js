@@ -1,5 +1,50 @@
 import { books, authors, genres, BOOKS_PER_PAGE } from './data.js'
 
+// --- Debugging Initialization ---
+console.log('Initializing Book Connect', {
+    booksCount: books.length,
+    authorsCount: Object.keys(authors).length,
+    genresCount: Object.keys(genres).length,
+    booksPerPage: BOOKS_PER_PAGE,
+    sampleBook: books[0]
+});
+
+// --- Utility Functions ---
+/**
+ * Creating fragments from an array  of elements.
+ * @param {HTMLElement[]} elements - Array of DOM elements
+ * @returns {DocumentFragment} - A document fragment containing the elements.
+ */
+const createFragment = (elements) => {
+    console.log('Creating fragment', { elementCount: elements.length });
+    const fragment = document.createDocumentFragment();
+    elements.forEach((element) => {
+        if (element) {
+            fragment.appendChild(element);
+        } else {
+            console.warn('Skipping null element in fragment');
+        }
+    });
+    return fragment;
+};
+
+/**
+ * Queries a DOM element using a data attribute selector.
+ * @param {string} key - Data attribute key (e.g., 'list-items').
+ * @returns {HTMLElement} - The matching DOM element.
+ * @throws {Errors} - If the element is not found.
+ */
+const queryDataElement = (key) => {
+    const element = document.querySelector(`[data-${key}]`);
+    if (!element) {
+        console.error(`Element with data-${key} not found`);
+        throw new Error(`Element with data-${key} not found`);
+    }
+    console.log(`Queried element: data-${key}`);
+    return element;
+};
+
+
 let page = 1;
 let matches = books
 
