@@ -274,6 +274,36 @@ class DropdownManager {
     }
 }
 
+// --- ThemeManager Class ---
+/**
+ * Manages theme swithcing and initialization.
+ */
+class ThemeManager {
+    /**
+     * Initializes the theme based on systm preferences.
+     */
+    static init() {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = prefersDark ? 'night' : 'day';
+        console.log('Initializing theme', { theme });
+        queryDataElement('settings-theme').value = theme;
+        this.applyTheme(theme);
+    }
+
+    /**
+     * Applies the selected theme.
+     * @param {string} theme - Theme name ('day' or 'night').
+     */
+    static applyTheme(theme) {
+        console.log('Applying theme', { theme });
+        const darkColor = theme === 'night' ? '255, 255, 255' : '10, 10, 20';
+        const lightColor = theme === 'night' ? '10, 10, 20' : '255, 255, 255';
+        document.documentElement.style.setProperty('--color-dark', darkColor);
+        document.documentElement.style.setProperty('--color-light', lightColor);
+    }
+}
+
+
 
 let page = 1;
 let matches = books
