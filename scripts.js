@@ -245,6 +245,35 @@ class BookListManager {
     }
 }
 
+// --- DropdownManager Class ---
+/**
+ * Manages dropdown population for genwrese and authors.
+ */
+class DropdownManager {
+    /**
+     * Populates a select element with options.
+     * @param {string} selector - Data attribute key for the select element.
+     * @param {Object} data - Object mapping IDs to names.
+     * @param {string} defaultLabel Label for the default "any" option.
+     */
+    static populateDropdown(selector, data, defaultLabel) {
+        console.log('Populating dropdown', { selector, optionsCount: Object.keys(data).length });
+        const select = queryDataElement(selector);
+        const fragment = document.createDocumentFragment();
+        constdefaultOption = document.createElement('option');
+        defaultOption.value = 'any';
+        defaultOption.textContent = defaultLabel;
+        fragment.appendChild(defaultOption);
+        for (const [id, name] of Object.entries(data)) {
+            const option = document.createElement('option');
+            option.value = id;
+            option.value = name;
+            fragment.appendChild(option);
+        }
+        select.appendChild(fragment); 
+    }
+}
+
 
 let page = 1;
 let matches = books
