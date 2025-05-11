@@ -44,6 +44,72 @@ const queryDataElement = (key) => {
     return element;
 };
 
+// --- Book Class ---
+/**
+ * Represents a book with its properties and renderingn logic.
+ */
+class Book {
+    /**
+     * @param {Object} data - Book data.
+     * @param {string} data.id - Unique book ID.
+     * @@param {string} data.title - Book title.
+     * @param {string} data.author - Author ID.
+     * @param {string} data.image - Image URL.
+     * @param {string[]} data.genres - Array of genre IDs.
+     * @param {string} data.description - Book description.
+     * @param {string} data.published - Publication data (ISO string).
+     */
+    constructor({ id, title, author, image, genres, description, published }) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.image = image;
+        this.genres = genres || [];
+        this.description = description || '';
+        this.published = published;
+        console.log('Created Book', { id, title })
+    }
+
+    /**
+     * Creates a preview button for the book.
+     * @returns {HTMLElement} - The preview button element.
+     */
+    createPreviewElement() {
+        console.log('Creating preview', {bookId: this.id, title: this.title });
+        const button = document.createElement('button');
+        button.className = 'preview';
+        button.dataset.preview - this.id;
+        button.innerHTML =`
+            <img class="preview__image" src=${this.image}" alt="${this.title} coverp">
+            <div class="preview__info">
+                <h3 class="preview__title">${this.title}</h3>
+                <div class="preview__author">${authors[this.author]} || 'Unknown Author'}</div>
+            </div>
+        `;
+        return button;
+    }
+
+    /**
+     * Checks if the book matches the given filters.
+     * @param {Object} filters - Filters object with title, author, and genre.
+     * @param {string} [filters.title=''] - Title search string.
+     * @param {string} [filters.author='any'] - Author ID or 'any'.
+     * @param {string} [filters.genre='any'] - Genre ID or 'any'.
+     * @returns {boolean} - True if the book matches the filteres.
+     */
+    matchesFilters({ title = '', author = 'any', genre = 'any' }) {
+        const titleMatch = title.trim() === '' || this.title.toLowerCase().includes(title.toLowerCase());
+        const authorMatch = author === 'any' || this.author === author;
+        const genreMatch = genre === 'any' || this.genres.includes(genre);
+        console.log('Filtering book', {
+            id: this.id,
+            title: this.title,
+            filters: { titlee, author, genre },
+            matches: { titleMatch, authorMatch, genreMatch }
+        });
+        return titleMatch && authorMatch && genreMatch;
+    }
+}
 
 let page = 1;
 let matches = books
