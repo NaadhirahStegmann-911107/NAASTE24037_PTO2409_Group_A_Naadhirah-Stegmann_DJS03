@@ -52,7 +52,7 @@ class Book {
     /**
      * @param {Object} data - Book data.
      * @param {string} data.id - Unique book ID.
-     * @@param {string} data.title - Book title.
+     * @param {string} data.title - Book title.
      * @param {string} data.author - Author ID.
      * @param {string} data.image - Image URL.
      * @param {string[]} data.genres - Array of genre IDs.
@@ -60,10 +60,17 @@ class Book {
      * @param {string} data.published - Publication data (ISO string).
      */
     constructor({ id, title, author, image, genres, description, published }) {
+        if (!id || !title || !author || !image) {
+            console.error('Invalid book data', { id, title, author, image });
+            throw new Error('Invalid book data');
+        }
         this.id = id;
         this.title = title;
         this.author = author;
-        this.image = image;
+        this.image = image.replace(/['"]+$/, '').trim();
+        if (image !== this.image) {
+            console.warn('Cleaned invalid image URL', {original: image, cleaned: this.image });
+        }
         this.genres = genres || [];
         this.description = description || '';
         this.published = published;
@@ -75,12 +82,16 @@ class Book {
      * @returns {HTMLElement} - The preview button element.
      */
     createPreviewElement() {
-        console.log('Creating preview', {bookId: this.id, title: this.title });
+        console.log('Creating preview', {bookId: this.id, title: this.title, image: this.image });
+        // Fallback image for failed image loads
+        const fallbackImage = 'https://via.placeholder.com/150?text=Book+Cover';
         const button = document.createElement('button');
         button.className = 'preview';
         button.dataset.preview - this.id;
         button.innerHTML =`
-            <img class="preview__image" src=${this.image}" alt="${this.title} coverp">
+            <img class="preview__image" src=${imageUrl || fallbackImage}" 
+            onerror="this.src='${fallbackImage}'; this.alt='Failed to load cover'"
+            alt="${this.title} cover">
             <div class="preview__info">
                 <h3 class="preview__title">${this.title}</h3>
                 <div class="preview__author">${authors[this.author]} || 'Unknown Author'}</div>
@@ -104,7 +115,7 @@ class Book {
         console.log('Filtering book', {
             id: this.id,
             title: this.title,
-            filters: { titlee, author, genre },
+            filters: { title, author, genre },
             matches: { titleMatch, authorMatch, genreMatch }
         });
         return titleMatch && authorMatch && genreMatch;
@@ -161,7 +172,7 @@ class BookListManager {
                 return null;
             }
         })
-            .filtere(Boolean);
+            .filter(Boolean);
         if (elements.length === 0) {
             console.warm('No valid elements to render');
         }
@@ -169,7 +180,7 @@ class BookListManager {
     }
 
     /**
-     * Initializes the book list  with the first page.
+     * Initializes the book list with the first page.
      */
     init() {
         console.log('Initializing book list');
@@ -187,7 +198,7 @@ class BookListManager {
             try {
                 return new Book(bookData).matchesFilters(filters);
             } catch (error) {
-                console.error('rror filtering book', { bookData, error });
+                console.error('Error filtering book', { bookData, error });
                 return false;
             }
         });
@@ -217,8 +228,8 @@ class BookListManager {
         const remaining = Math.max(this.matches.length - this.page * this.booksPerPage, 0);
         console.log('Updating Show More button', { remaining });
         this.elements.listButton.innerHTML = `
-        <span>Show more>/span>
-        <span class="list__remaining"> (&{remaining})</span>
+            <span>Show more</span>
+            <span class="list__remaining"> (${remaining})</span>
         `;
         this.elements.listButton.disabled = remaining === 0;
     }
@@ -239,7 +250,7 @@ class BookListManager {
         this.elements.listBlur.src = book.image;
         this.elements.listImage.src = book.image;
         this.elements.listTitle.textContent = book.title;
-        this.elements.listSubtitlee.textContent = `${authors[book.author] || 'Unknown Author'} (${new Date(book.published).getFullYear()})`;
+        this.elements.listSubtitle.textContent = `${authors[book.author] || 'Unknown Author'} (${new Date(book.published).getFullYear()})`;
         this.elements.listDescription.textContent = book.description;
         console.log('Displayed book details', { title: book.title });
     }
@@ -247,27 +258,27 @@ class BookListManager {
 
 // --- DropdownManager Class ---
 /**
- * Manages dropdown population for genwrese and authors.
+ * Manages dropdown population for genres and authors.
  */
 class DropdownManager {
     /**
      * Populates a select element with options.
      * @param {string} selector - Data attribute key for the select element.
      * @param {Object} data - Object mapping IDs to names.
-     * @param {string} defaultLabel Label for the default "any" option.
+     * @param {string} defaultLabel - Label for the default "any" option.
      */
     static populateDropdown(selector, data, defaultLabel) {
         console.log('Populating dropdown', { selector, optionsCount: Object.keys(data).length });
         const select = queryDataElement(selector);
         const fragment = document.createDocumentFragment();
-        constdefaultOption = document.createElement('option');
+        const defaultOption = document.createElement('option');
         defaultOption.value = 'any';
         defaultOption.textContent = defaultLabel;
         fragment.appendChild(defaultOption);
         for (const [id, name] of Object.entries(data)) {
             const option = document.createElement('option');
             option.value = id;
-            option.value = name;
+            option.textContent = name;
             fragment.appendChild(option);
         }
         select.appendChild(fragment); 
@@ -276,7 +287,7 @@ class DropdownManager {
 
 // --- ThemeManager Class ---
 /**
- * Manages theme swithcing and initialization.
+ * Manages theme switching and initialization.
  */
 class ThemeManager {
     /**
@@ -327,7 +338,7 @@ queryDataElement('search-cancel').addEventListener('click', () => {
     queryDataElement('search-overlay').open = false;
 });
 
-queryDataElement('setting-cancel').addEventListener('click', () => {
+queryDataElement('settings-cancel').addEventListener('click', () => {
     console.log('Settings cancel clicked');
     queryDataElement('settings-overlay').open = false;
 });
@@ -344,7 +355,7 @@ queryDataElement('header-settings').addEventListener('click', () => {
 });
 
 queryDataElement('list-close').addEventListener('click', () => {
-    console.log('List close clicked');
+    console.log('Closed book details clicked');
     queryDataElement('list-active').open = false;
 });
 
@@ -373,7 +384,7 @@ queryDataElement('list-button').addEventListener('click', () => {
 
 queryDataElement('list-items').addEventListener('click', (event) => {
     console.log('Book list clicked', { target: event.target.tagName });
-    const pathArray = Array.from(event.composedPath());z
+    const pathArray = Array.from(event.composedPath());
     for (const node of pathArray) {
         if (node.dataset?.preview) {
             console.log('Preview button clicked', { bookId: node.dataset.preview });
