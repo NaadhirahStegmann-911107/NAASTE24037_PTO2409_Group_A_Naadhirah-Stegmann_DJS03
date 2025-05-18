@@ -38,7 +38,7 @@ const queryDataElement = (key) => {
     return element;
 };
 
-const validateImageUrl = (key,url) => {
+const validateImageUrl = (key, url) => {
     if (!url || typeof url !== 'string' ||url.trim() === '') {
         console.warn(`Invalid image URL for ${key}`, { url });
         return '';
@@ -78,26 +78,6 @@ class Book {
         this.description = description || '';
         this.published = published;
         console.log('Created Book', { id, title })
-    }
-
-    /**
-     * Creates a preview button for the book.
-     * @returns {HTMLElement} - The preview button element.
-     */
-    createPreviewElement() {
-        console.log(`Creating preview for book ${this.id}`);
-        const button = document.createElement('button');
-        button.className = 'preview';
-        button.dataset.preview = this.id;
-        button.innerHTML =`
-            <img class="preview__image" src=${this.image}" 
-                alt="${this.title ? this.title + ' cover' : 'No cover available'}">
-            <div class="preview__info">
-                <h3 class="preview__title">${this.title}</h3>
-                <div class="preview__author">${authors[this.author]} || 'Unknown Author'}</div>
-            </div>
-        `;
-        return button;
     }
 
     /**
@@ -168,7 +148,13 @@ class BookListManager {
         const booksToRender = this.matches.slice(start, end);
         const elements = booksToRender.map((bookData) => {
             try {
-                return new Book(bookData).createPreviewElement();
+                const book = new Book(bookData);
+                const preview = document.createElement('book-preview');
+                preview.setAttribute('id', book.id);
+                preview.setAttribute('title', book.title);
+                preview.setAttribute('author', uthor[book.author] || 'Unknown Author');
+                preview.setAttribute('image', book.image);
+                return preview;
             } catch (error) {
                 console.error('Failed to render book', { bookData, error });
                 return null;
@@ -194,7 +180,7 @@ class BookListManager {
      * @param {Object} filters - Filters object with title, author, and genre.     
      */
     filterBooks(filters) {
-        console.log('Applying filters', filters);
+        console.log('Filtering books', filters);
         this.matches = this.books.filter((bookData) => {
             try {
                 return new Book(bookData).matchesFilters(filters);
