@@ -1,7 +1,7 @@
 class BookPreview extends HTMLElement {
     constructor() {
         super();
-        this.attaachShadow({ mode: 'open'});
+        this.attachShadow({ mode: 'open'});
     }
 
     static get observedAttributes() {

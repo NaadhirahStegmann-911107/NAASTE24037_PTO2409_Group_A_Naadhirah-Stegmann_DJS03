@@ -38,8 +38,12 @@ const createFragment = (elements) => {
     return fragment;
 };
 
-
-
+/**
+ * Validate an image URL, returning an empty string if invalid.
+ * @param {string} key - Identifier for logging purposes. 
+ * @param {string} url - Image URL to validate. 
+ * @returns {string} - Validate URL or emprty string.
+ */
 const validateImageUrl = (key, url) => {
     if (!url || typeof url !== 'string' ||url.trim() === '') {
         console.warn(`Invalid image URL for ${key}`, { url });
@@ -48,7 +52,7 @@ const validateImageUrl = (key, url) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
         return url.trim();
     }
-    console.warm(`Non-HTTP image URL for ${key}`, { url });
+    console.warn(`Non-HTTP image URL for ${key}`, { url });
     return '';
 }
 
@@ -67,7 +71,7 @@ class Book {
      * @param {string} data.description - Book description.
      * @param {string} data.published - Publication data (ISO string).
      */
-    constructor({ id, title, author, image, genres, description, published }) {
+    constructor({ id, title, author, image, genres, description, published }) {   console.log('Creating Book', { id, title, author });
         if (!id || !title || !author) {
             console.error('Invalid book data', { id, title, author,});
             throw new Error('Invalid book data');
@@ -154,7 +158,7 @@ class BookListManager {
                 const preview = document.createElement('book-preview');
                 preview.setAttribute('id', book.id);
                 preview.setAttribute('title', book.title);
-                preview.setAttribute('author', uthor[book.author] || 'Unknown Author');
+                preview.setAttribute('author', author[book.author] || 'Unknown Author');
                 preview.setAttribute('image', book.image);
                 return preview;
             } catch (error) {
@@ -163,7 +167,7 @@ class BookListManager {
             }
         }).filter(Boolean);
         if (elements.length === 0) {
-            console.warm('No valid elements to render');
+            console.warn('No valid elements to render');
         }
         this.elements.listItems.appendChild(createFragment(elements)); 
     }
