@@ -6,7 +6,7 @@ console.log('Initializing Book Connect', {
     authorsCount: Object.keys(authors).length,
     genresCount: Object.keys(genres).length,
     booksPerPage: BOOKS_PER_PAGE,
-    sampleBook: books[0]
+    sampleBook: books[0],
 });
 
 // --- Utility Functions ---
@@ -18,13 +18,7 @@ console.log('Initializing Book Connect', {
 const createFragment = (elements) => {
     console.log('Creating fragment', { elementCount: elements.length });
     const fragment = document.createDocumentFragment();
-    elements.forEach((element) => {
-        if (element) {
-            fragment.appendChild(element);
-        } else {
-            console.warn('Skipping null element in fragment');
-        }
-    });
+    elements.forEach((element) => element && fragment.appendChild(element));
     return fragment;
 };
 
@@ -44,6 +38,18 @@ const queryDataElement = (key) => {
     return element;
 };
 
+const validateImageUrl = (key,url) => {
+    if (!url || typeof url !== 'string' ||url.trim() === '') {
+        console.warn(`Invalid image URL for ${key}`, { url });
+        return '';
+    }
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url.trim();
+    }
+    console.warm(`Non-HTTP image URL for ${key}`, { url });
+    return '';
+}
+
 // --- Book Class ---
 /**
  * Represents a book with its properties and renderingn logic.
@@ -60,17 +66,14 @@ class Book {
      * @param {string} data.published - Publication data (ISO string).
      */
     constructor({ id, title, author, image, genres, description, published }) {
-        if (!id || !title || !author || !image) {
-            console.error('Invalid book data', { id, title, author, image });
+        if (!id || !title || !author) {
+            console.error('Invalid book data', { id, title, author,});
             throw new Error('Invalid book data');
         }
         this.id = id;
         this.title = title;
         this.author = author;
-        this.image = image.replace(/['"]+$/, '').trim();
-        if (image !== this.image) {
-            console.warn('Cleaned invalid image URL', {original: image, cleaned: this.image });
-        }
+        this.image = validateImageUrl(`book ${id}`, image);
         this.genres = genres || [];
         this.description = description || '';
         this.published = published;
@@ -82,16 +85,13 @@ class Book {
      * @returns {HTMLElement} - The preview button element.
      */
     createPreviewElement() {
-        console.log('Creating preview', {bookId: this.id, title: this.title, image: this.image });
-        // Fallback image for failed image loads
-        const fallbackImage = 'https://via.placeholder.com/150?text=Book+Cover';
+        console.log(`Creating preview for book ${this.id}`);
         const button = document.createElement('button');
         button.className = 'preview';
-        button.dataset.preview - this.id;
+        button.dataset.preview = this.id;
         button.innerHTML =`
-            <img class="preview__image" src=${imageUrl || fallbackImage}" 
-            onerror="this.src='${fallbackImage}'; this.alt='Failed to load cover'"
-            alt="${this.title} cover">
+            <img class="preview__image" src=${this.image}" 
+                alt="${this.title ? this.title + ' cover' : 'No cover available'}">
             <div class="preview__info">
                 <h3 class="preview__title">${this.title}</h3>
                 <div class="preview__author">${authors[this.author]} || 'Unknown Author'}</div>
@@ -159,20 +159,21 @@ class BookListManager {
      * @param {number} end - End index of books to render.
      */
     renderBooks(start, end) {
-        console.log('Rendering books', { start, end, matchesCount: this.matches.length });
+        console.log('Rendering books', { start, end });
         if (start >= this.matches.length) {
-            console.warm('No books to render', { start, end, matchesCount: this.matches.length });
+            console.log('No books to render');
+            this.elements.listMessage.hidden = false;
             return;
         }
-        const elements = this.matches.slice(start, end).map((bookData) => {
+        const booksToRender = this.matches.slice(start, end);
+        const elements = booksToRender.map((bookData) => {
             try {
                 return new Book(bookData).createPreviewElement();
             } catch (error) {
-                console.error('Error creating preview', { bookData, error });
+                console.error('Failed to render book', { bookData, error });
                 return null;
             }
-        })
-            .filter(Boolean);
+        }).filter(Boolean);
         if (elements.length === 0) {
             console.warm('No valid elements to render');
         }
@@ -202,10 +203,9 @@ class BookListManager {
                 return false;
             }
         });
-        console.log('Filter results', { matchesCount: this.matches.length });
         this.page = 1;
         this.elements.listItems.innerHTML = '';
-        thisrenderBooks(0, this.booksPerPage);
+        this.renderBooks(0, this.booksPerPage);
         this.elements.listMessage.hidden = this.matches.length !== 0;
         this.updateShowMoreButton();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -216,7 +216,7 @@ class BookListManager {
      */
     loadMore() {
         console.log('Loading more books', { page: this.page });
-        this.renderBooks(this.page * this.booksPerPage, (this.page +1) * this.booksPerPage);
+        this.renderBooks(this.page * this.booksPerPage, (this.page + 1) * this.booksPerPage);
         this.page += 1;
         this.updateShowMoreButton();
     }
@@ -252,7 +252,7 @@ class BookListManager {
         this.elements.listTitle.textContent = book.title;
         this.elements.listSubtitle.textContent = `${authors[book.author] || 'Unknown Author'} (${new Date(book.published).getFullYear()})`;
         this.elements.listDescription.textContent = book.description;
-        console.log('Displayed book details', { title: book.title });
+        this.elements.listDescription.textcontent = book.description;
     }
 }
 
@@ -268,7 +268,7 @@ class DropdownManager {
      * @param {string} defaultLabel - Label for the default "any" option.
      */
     static populateDropdown(selector, data, defaultLabel) {
-        console.log('Populating dropdown', { selector, optionsCount: Object.keys(data).length });
+        console.log('Populating dropdown', { selector });
         const select = queryDataElement(selector);
         const fragment = document.createDocumentFragment();
         const defaultOption = document.createElement('option');
